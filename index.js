@@ -26,6 +26,9 @@ app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/items", itemRoutes);
 
 // MongoDB Connection
+app.get("/", (req,res) => {
+  res.send("Server is running!!!")
+})
 
 
 
