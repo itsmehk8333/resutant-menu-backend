@@ -1,6 +1,7 @@
 const express = require("express");
 const Category = require("../models/Category");
 const Item = require("../models/Item"); // Assuming you have an Item model
+const SubCategory = require("../models/SubCategory");
 
 const router = express.Router();
 
@@ -16,19 +17,82 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get Menu (Categories with Subcategories and Items)
 router.get("/", async (req, res) => {
   try {
-    const categories = await Category.find().populate({
-      path: "subCategories",
-      populate: { path: "items" }
-    });
-    res.status(200).json(categories);
+    // Fetch all categories
+    const categories = await Category.find();
+
+    // Fetch all items and populate their subCategory (if any)
+    const items = await Item.find().populate("subCategory");
+
+    // Build the response structure
+    const result = await Promise.all(
+      categories.map(async (category) => {
+        // Get all items for this category
+        const categoryItems = items.filter(
+          (item) => item.category.toString() === category._id.toString()
+        );
+
+        // Separate items with and without subcategories
+        const itemsWithoutSubCategory = categoryItems
+          .filter((item) => !item.subCategory)
+          .map((item) => ({
+            _id: item._id,
+            name: item.name,
+            price: item.price,
+            isAvailable: item.isAvailable
+          }));
+
+        // Group items by subcategory
+        const subCategoryItems = {};
+        categoryItems
+          .filter((item) => item.subCategory)
+          .forEach((item) => {
+            const subCatId = item.subCategory._id.toString();
+            if (!subCategoryItems[subCatId]) {
+              subCategoryItems[subCatId] = {
+                _id: item.subCategory._id,
+                name: item.subCategory.name,
+                items: []
+              };
+            }
+            subCategoryItems[subCatId].items.push({
+              _id: item._id,
+              name: item.name,
+              price: item.price,
+              isAvailable: item.isAvailable
+            });
+          });
+
+        // Fetch subcategories for this category to ensure we include empty ones
+        const subCategories = await SubCategory.find({ category: category._id });
+        subCategories.forEach((subCat) => {
+          const subCatId = subCat._id.toString();
+          if (!subCategoryItems[subCatId]) {
+            subCategoryItems[subCatId] = {
+              _id: subCat._id,
+              name: subCat.name,
+              items: []
+            };
+          }
+        });
+
+        return {
+          _id: category._id,
+          name: category.name,
+          subCategories: Object.values(subCategoryItems),
+          items: itemsWithoutSubCategory
+        };
+      })
+    );
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+module.exports = router;
 // Update an existing item
 router.put("/item/:id", async (req, res) => {
   try {
