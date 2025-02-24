@@ -112,6 +112,25 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+
+router.get("/", async(req,res) => {
+  try {
+
+    const data = await Item.find({isAvailable :true});
+    if(data){
+     return  res.json({
+        success:true,
+        data:data
+      })
+    }
+  } catch (error) {
+      res.json({
+        success:false,
+        message:error.message
+      })
+  }
+})
+
 // Delete an item
 router.delete("/:id", async (req, res) => {
   try {
