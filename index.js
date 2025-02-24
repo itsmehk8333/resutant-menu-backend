@@ -8,7 +8,9 @@ dotenv.config();
 const categoryRoutes = require("./routes/categoryRoutes.js");
 const subCategoryRoutes = require("./routes/subCategoryRoutes.js");
 const itemRoutes = require("./routes/itemRoutes.js");
-const recommanded = require("./routes/Recommanded.routes.js")
+const recommanded = require("./routes/Recommanded.routes.js");
+const specailOffer = require("./routes/SpecailOffer.router.js")
+
 
 const app = express();
 
@@ -26,6 +28,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/recommended" ,recommanded )
+app.use("/api/specailoffer", specailOffer)
 // MongoDB Connection
 app.get("/", (req,res) => {
   res.send("Server is running!!!")
