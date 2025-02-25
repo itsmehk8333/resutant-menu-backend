@@ -8,8 +8,8 @@ const router = express.Router();
 // Create Item
 router.post("/", async (req, res) => {
   try {
-    const { name, price, categoryId, subCategoryId } = req.body;
-    console.log(req.body);
+    const { name, price, categoryId, subCategoryId,Grub } = req.body;
+    // console.log(req.body);
 
     // Validate required categoryId
     if (!categoryId) {
@@ -38,7 +38,8 @@ router.post("/", async (req, res) => {
       price,
       category: categoryId, // Required
       subCategory: subCategoryId || null, // Optional
-      isAvailable: true
+      isAvailable: true,
+      Grub:Grub
     });
     await item.save();
 
@@ -61,7 +62,7 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, categoryId, subCategoryId, isAvailable } = req.body;
+    const { name, price, categoryId, subCategoryId, isAvailable, Grub } = req.body;
 
     // If categoryId is provided, validate it
     if (categoryId) {
@@ -88,7 +89,8 @@ router.patch("/:id", async (req, res) => {
       price,
       category: categoryId,
       subCategory: subCategoryId || null,
-      isAvailable
+      isAvailable,
+      Grub
     };
 
     const item = await Item.findByIdAndUpdate(id, updatedData, { new: true });
@@ -113,21 +115,21 @@ router.patch("/:id", async (req, res) => {
 });
 
 
-router.get("/", async(req,res) => {
+router.get("/", async (req, res) => {
   try {
 
-    const data = await Item.find({isAvailable :true});
-    if(data){
-     return  res.json({
-        success:true,
-        data:data
+    const data = await Item.find({ isAvailable: true });
+    if (data) {
+      return res.json({
+        success: true,
+        data: data
       })
     }
   } catch (error) {
-      res.json({
-        success:false,
-        message:error.message
-      })
+    res.json({
+      success: false,
+      message: error.message
+    })
   }
 })
 
