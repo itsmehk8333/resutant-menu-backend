@@ -9,7 +9,8 @@ const categoryRoutes = require("./routes/categoryRoutes.js");
 const subCategoryRoutes = require("./routes/subCategoryRoutes.js");
 const itemRoutes = require("./routes/itemRoutes.js");
 const recommanded = require("./routes/Recommanded.routes.js");
-const specailOffer = require("./routes/SpecailOffer.router.js")
+const specailOffer = require("./routes/SpecailOffer.router.js");
+const combos = require("./routes/Combo.routes.js")
 
 
 const app = express();
@@ -28,7 +29,8 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/recommended" ,recommanded )
-app.use("/api/specailoffer", specailOffer)
+app.use("/api/specailoffer", specailOffer);
+app.use("/api/combo" , combos)
 // MongoDB Connection
 app.get("/", (req,res) => {
   res.send("Server is running!!!")

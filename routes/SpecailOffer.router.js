@@ -7,7 +7,6 @@ const SpecialOffer = require('../models/SpecailOfferIte.schema');
 // CREATE - Add a new special offer
 router.post('/add-item', async (req, res) => {
     try {
-         console.log(req.body)
         const { item, SpecialOfferPrice } = req.body;
 
         // Validation
@@ -20,16 +19,13 @@ router.post('/add-item', async (req, res) => {
         if (typeof SpecialOfferPrice !== 'number' || SpecialOfferPrice < 0) {
             return res.status(400).json({ message: 'SpecialOfferPrice must be a positive number' });
         }
-
         const specialOffer = new SpecialOffer({
             item,
             SpecialOfferPrice
             // createdAt will be set automatically
         });
-
         const savedSpecialOffer = await specialOffer.save();
         const populatedSpecialOffer = await SpecialOffer.findById(savedSpecialOffer._id).populate('item');
-
         res.status(201).json({
             message: 'Special offer created successfully',
             specialOffer: populatedSpecialOffer || savedSpecialOffer
@@ -44,11 +40,9 @@ router.post('/add-item', async (req, res) => {
 router.get('/get-item', async (req, res) => {
     try {
         const specialOffers = await SpecialOffer.find().populate('item');
-
         if (!specialOffers || specialOffers.length === 0) {
-            return res.status(404).json({ message: 'No special offers found' });
+            return res.json({ message: 'No special offers found' });
         }
-
         res.status(200).json({
             message: 'Special offers fetched successfully',
             specialOffers
@@ -67,13 +61,10 @@ router.get('/:id', async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid Special Offer ID' });
         }
-
         const specialOffer = await SpecialOffer.findById(id).populate('item');
-
         if (!specialOffer) {
             return res.status(404).json({ message: 'Special offer not found' });
         }
-
         res.status(200).json({
             message: 'Special offer fetched successfully',
             specialOffer
@@ -95,12 +86,12 @@ router.put('/:id', async (req, res) => {
         }
 
         const updateData = {};
-        if (item) {
-            if (!mongoose.Types.ObjectId.isValid(item)) {
-                return res.status(400).json({ message: 'Invalid Item ID' });
-            }
-            updateData.item = item;
-        }
+        // if (item) {
+        //     if (!mongoose.Types.ObjectId.isValid(item)) {
+        //         return res.status(400).json({ message: 'Invalid Item ID' });
+        //     }
+        //     updateData.item = item;
+        // }
         if (SpecialOfferPrice !== undefined) {
             if (typeof SpecialOfferPrice !== 'number' || SpecialOfferPrice < 0) {
                 return res.status(400).json({ message: 'SpecialOfferPrice must be a positive number' });

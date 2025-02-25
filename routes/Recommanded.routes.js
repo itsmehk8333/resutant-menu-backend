@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 router.post('/', async (req, res) => {
     try {
         // Extract items from the request body
-        let { items } = req.body;
+        let { items, isActive } = req.body;
 
         // Normalize input: Convert single item to array if necessary
         if (!items) {
@@ -38,6 +38,7 @@ router.post('/', async (req, res) => {
             // If no document exists, create a new one
             recommended = new Recommended({
                 items: items,
+                isActive: isActive
                 // createdAt will be set automatically by default
             });
             await recommended.save();
@@ -60,7 +61,7 @@ router.post('/', async (req, res) => {
 router.get("/", async (req, res) => {
     try {
 
-        const data = await Recommended.find().populate({
+        const data = await Recommended.find({ isActive: true }).populate({
             path: "items"
         })
 
@@ -71,10 +72,50 @@ router.get("/", async (req, res) => {
 
     } catch (error) {
 
-        console.log(error , "error")
+        console.log(error, "error")
     }
 })
 
 
+router.put("/:id", async (req, res) => {
+    try {
+
+    } catch (error) {
+        console.log(error, "error")
+    }
+})
+
+router.delete("/:docId/items/:itemId", async (req, res) => {
+    try {
+        const { docId , itemId } = req.params;
+        // console.log(id)
+        const updatedDoc = await Recommended.findByIdAndUpdate(
+            docId,
+            { $pull: { items: itemId } },
+            { new: true }
+        );
+
+        if (!updatedDoc) {
+            return res.status(404).json({
+                success: false,
+                message: "Recommended item not found"
+            });
+        }
+        else {
+            res.status(200).json({
+                success: true,
+                message: "Item removed from the array successfully",
+                data: updatedDoc
+            });
+
+        }
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while deleting the recommended item"
+        });
+    }
+});
 
 module.exports = router;
