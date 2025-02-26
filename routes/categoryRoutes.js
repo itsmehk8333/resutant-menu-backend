@@ -91,6 +91,96 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.get("/sorted", async (req, res) => {
+  try {
+    // Fetch all categories
+    const categories = await Category.find();
+
+    // Fetch all items and populate their subCategory (if any)
+    const items = await Item.find().populate("subCategory");
+
+    // Get the sort parameter from the query (default to lowToHigh if not provided, or validate)
+    const sort = req.query.sort || "lowToHigh"; // Default to lowToHigh for consistency
+    if (!["lowToHigh", "highToLow"].includes(sort)) {
+      return res.status(400).json({ error: "Invalid sort parameter. Use 'lowToHigh' or 'highToLow'." });
+    }
+
+    let sortedItems = [...items]; // Create a copy to avoid modifying the original query result
+
+    // Apply sorting based on the sort parameter
+    if (sort === "lowToHigh") {
+      sortedItems.sort((a, b) => a.price - b.price); // Sort ascending by price
+    } else if (sort === "highToLow") {
+      sortedItems.sort((a, b) => b.price - a.price); // Sort descending by price
+    }
+
+    // Build the response structure with sorted items
+    const result = await Promise.all(
+      categories.map(async (category) => {
+        // Get all items for this category from the sorted items
+        const categoryItems = sortedItems.filter(
+          (item) => item.category.toString() === category._id.toString()
+        );
+
+        // Separate items with and without subcategories
+        const itemsWithoutSubCategory = categoryItems
+          .filter((item) => !item.subCategory)
+          .map((item) => ({
+            _id: item._id,
+            name: item.name,
+            price: item.price,
+            isAvailable: item.isAvailable,
+          }));
+
+        // Group items by subcategory
+        const subCategoryItems = {};
+        categoryItems
+          .filter((item) => item.subCategory)
+          .forEach((item) => {
+            const subCatId = item.subCategory._id.toString();
+            if (!subCategoryItems[subCatId]) {
+              subCategoryItems[subCatId] = {
+                _id: item.subCategory._id,
+                name: item.subCategory.name,
+                items: [],
+              };
+            }
+            subCategoryItems[subCatId].items.push({
+              _id: item._id,
+              name: item.name,
+              price: item.price,
+              isAvailable: item.isAvailable,
+            });
+          });
+
+        // Fetch subcategories for this category to ensure we include empty ones
+        const subCategories = await SubCategory.find({ category: category._id });
+        subCategories.forEach((subCat) => {
+          const subCatId = subCat._id.toString();
+          if (!subCategoryItems[subCatId]) {
+            subCategoryItems[subCatId] = {
+              _id: subCat._id,
+              name: subCat.name,
+              items: [],
+            };
+          }
+        });
+
+        return {
+          _id: category._id,
+          name: category.name,
+          subCategories: Object.values(subCategoryItems),
+          items: itemsWithoutSubCategory,
+        };
+      })
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 router.get('/get-by-grub', async (req, res) => {
   try {
     const grub = req.query.grub; // e.g., ?grub=Veg (optional filter)
